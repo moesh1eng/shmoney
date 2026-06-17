@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Shmoney</title>
+<meta name="description" content="Personal income, savings split, and spending control">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#13231C">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Shmoney">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="app">
+
+  <header class="topbar">
+    <div class="topbar-title">
+      <span class="topbar-label">shmoney</span>
+      <span class="topbar-date" id="todayDate"></span>
+    </div>
+    <button class="icon-btn" id="resetBtn" aria-label="Reset all data" title="Reset all data">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 12a9 9 0 1 0 2.6-6.4M3 4v5h5"/></svg>
+    </button>
+  </header>
+
+  <section class="hero">
+    <div class="hero-row">
+      <div class="hero-figure">
+        <span class="hero-label">earned this cycle</span>
+        <span class="hero-number" id="totalEarned">$0</span>
+      </div>
+      <div class="hero-figure hero-figure--right">
+        <span class="hero-label">hours logged</span>
+        <span class="hero-number hero-number--sm" id="totalHours">0</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="card-head">
+      <span class="card-icon">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+      </span>
+      <h2>Log today's shift</h2>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label for="hoursInput">Hours</label>
+        <input type="number" id="hoursInput" inputmode="decimal" min="0" max="16" step="0.5" placeholder="8">
+      </div>
+      <div class="field field--grow">
+        <label for="jobSelect">Job</label>
+        <select id="jobSelect">
+          <option value="17.5" data-job="Crown Pastries">Crown Pastries &middot; $17.50/hr</option>
+          <option value="2" data-job="Camp">Camp (cash) &middot; $2/hr</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn btn--primary btn--block" id="logHoursBtn">Add shift</button>
+    <div class="shift-log" id="shiftLog"></div>
+  </section>
+
+  <section class="card">
+    <div class="card-head">
+      <span class="card-icon">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3v18M5 8l7-5 7 5M5 16l7 5 7-5"/></svg>
+      </span>
+      <h2>TFSA vs. CIBC payoff</h2>
+    </div>
+    <p class="card-sub">CIBC: <strong id="cibcOwedDisplay">$1,200</strong> owed of $2,000 limit &middot; due <strong>June 24</strong></p>
+
+    <div class="slider-row">
+      <span class="slider-end">0%</span>
+      <input type="range" id="tfsaSlider" min="0" max="50" step="5" value="15">
+      <span class="slider-end">50%</span>
+    </div>
+    <div class="slider-readout">
+      <span class="slider-readout-label">to TFSA</span>
+      <span class="slider-readout-value" id="tfsaPctLabel">15%</span>
+    </div>
+
+    <div class="split-stats">
+      <div class="split-stat split-stat--tfsa">
+        <span class="split-stat-label">monthly to TFSA</span>
+        <span class="split-stat-value" id="tfsaAmt">$0</span>
+      </div>
+      <div class="split-stat split-stat--debt">
+        <span class="split-stat-label">months to clear CIBC</span>
+        <span class="split-stat-value" id="cibcMonths">&ndash;&ndash;</span>
+      </div>
+    </div>
+
+    <label class="check-row">
+      <input type="checkbox" id="carSaleToggle">
+      <span>Car sale closed &mdash; apply proceeds to CIBC</span>
+    </label>
+    <div class="field-row" id="carSaleAmountRow" hidden>
+      <div class="field field--grow">
+        <label for="carSaleAmount">Sale amount applied to CIBC</label>
+        <input type="number" id="carSaleAmount" inputmode="decimal" min="0" step="1" placeholder="e.g. 1200">
+      </div>
+      <button class="btn btn--ghost" id="applyCarSaleBtn">Apply</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="card-head">
+      <span class="card-icon">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="6" width="20" height="13" rx="2"/><path d="M2 10h20"/></svg>
+      </span>
+      <h2>Spending caps</h2>
+    </div>
+
+    <div class="cap-block" data-cap="amex">
+      <div class="cap-top">
+        <span class="cap-name">Amex Cobalt &middot; groceries &amp; dining</span>
+        <button class="cap-edit" data-edit="amexCap" aria-label="Edit cap">edit cap</button>
+      </div>
+      <div class="cap-bar"><div class="cap-bar-fill" id="amexBarFill"></div></div>
+      <div class="cap-bottom">
+        <span id="amexStatus">$0 of $300</span>
+        <div class="cap-add">
+          <input type="number" id="amexSpend" inputmode="decimal" min="0" step="1" placeholder="0">
+          <button class="btn btn--ghost btn--sm" id="amexAddBtn">add</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="cap-block cap-block--locked" data-cap="cibc">
+      <div class="cap-top">
+        <span class="cap-name">CIBC &middot; locked until June 24</span>
+      </div>
+      <div class="cap-bar"><div class="cap-bar-fill cap-bar-fill--danger" id="cibcBarFill"></div></div>
+      <div class="cap-bottom">
+        <span id="cibcStatus">$0 new spend &mdash; should stay $0</span>
+        <div class="cap-add">
+          <input type="number" id="cibcSpend" inputmode="decimal" min="0" step="1" placeholder="0">
+          <button class="btn btn--ghost btn--sm" id="cibcAddBtn">add</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="cap-block" data-cap="gas">
+      <div class="cap-top">
+        <span class="cap-name">Gas &amp; transport</span>
+        <button class="cap-edit" data-edit="gasCap" aria-label="Edit cap">edit cap</button>
+      </div>
+      <div class="cap-bar"><div class="cap-bar-fill cap-bar-fill--success" id="gasBarFill"></div></div>
+      <div class="cap-bottom">
+        <span id="gasStatus">no cap set</span>
+        <div class="cap-add">
+          <input type="number" id="gasSpend" inputmode="decimal" min="0" step="1" placeholder="0">
+          <button class="btn btn--ghost btn--sm" id="gasAddBtn">add</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="cap-block cap-block--flagged">
+      <div class="cap-top">
+        <span class="cap-name">Insurance &middot; ~$500/mo</span>
+        <span class="flag-tag">uncertain</span>
+      </div>
+      <p class="flag-note">Car sale may cover this. Not auto-budgeted &mdash; confirm with buyer/insurer before counting it as freed-up cash.</p>
+    </div>
+  </section>
+
+  <div class="alert" id="alertBox" hidden>
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 9v4M12 17h.01M10.3 3.9 2.5 17a2 2 0 0 0 1.7 3h15.6a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
+    <span id="alertText"></span>
+  </div>
+
+  <footer class="footer-note">
+    everything here saves on this device only &middot; no bank connection
+  </footer>
+
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
